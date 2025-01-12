@@ -1,0 +1,64 @@
+/* Base Tailwind imports */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Color System */
+.ns-root {
+  --primary: #FF4500;
+  --primary-light: #FF6A33;
+  --primary-dark: #CC3700;
+  --surface: #242424;
+  --surface-light: #2F2F2F;
+  --background: #121212;
+  --text: #FFFFFF;
+  --text-secondary: #B3B3B3;
+  
+  /* Button Colors */
+  --btn-create: #4CAF50;
+  --btn-create-pressed: #388E3C;
+  --btn-report: #F44336;
+  --btn-report-pressed: #D32F2F;
+  --btn-action: #2196F3;
+  --btn-action-pressed: #1976D2;
+}
+
+/* Enhanced Button Styles */
+.btn {
+  font-size: 18px;
+  font-weight: 700;
+  padding: 16px 32px;
+  border-radius: 12px;
+  margin: 8px 0;
+  animation-duration: 0.2s;
+}
+
+.btn-create {
+  background-color: var(--btn-create);
+  color: #ffffff;
+}
+
+.btn-create:active {
+  background-color: var(--btn-create-pressed);
+  transform: scale(0.98);
+}
+
+.btn-report {
+  background-color: var(--btn-report);
+  color: #ffffff;
+}
+
+.btn-report:active {
+  background-color: var(--btn-report-pressed);
+  transform: scale(0.98);
+}
+
+.btn-action {
+  background-color: var(--btn-action);
+  color: #ffffff;
+}
+
+.btn-action:active {
+  background-color: var(--btn-action-pressed);
+  transform: scale(0.98);
+}

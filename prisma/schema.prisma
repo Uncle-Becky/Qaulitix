@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Document {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title           String
+  type            String
+  content         String
+  version         Int       @default(1)
+  status          String    @default("draft")
+  metadata        Json      @default("{}")
+  revisionHistory Json[]    @default([])
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @default(now()) @map("updated_at")
+  createdBy       String?   @map("created_by") @db.Uuid
+
+  @@map("documents")
+}
+
+model Inspection {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  date        DateTime
+  location    String
+  status      String    @default("pending")
+  assignedTo  String?   @map("assigned_to") @db.Uuid
+  checklist   Json      @default("[]")
+  priority    String    @default("medium")
+  jobNumber   String    @map("job_number")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @default(now()) @map("updated_at")
+  createdBy   String?   @map("created_by") @db.Uuid
+
+  @@map("inspections")
+}
+
+model Deficiency {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  description  String
+  severity     String
+  location     String
+  status       String    @default("open")
+  inspectionId String?   @map("inspection_id") @db.Uuid
+  assignedTo   String?   @map("assigned_to") @db.Uuid
+  dueDate      DateTime? @map("due_date")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @default(now()) @map("updated_at")
+  createdBy    String?   @map("created_by") @db.Uuid
+
+  @@map("deficiencies")
+}
+
+model Photo {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  url          String
+  description  String?
+  location     String
+  deficiencyId String?   @map("deficiency_id") @db.Uuid
+  inspectionId String?   @map("inspection_id") @db.Uuid
+  jobNumber    String    @map("job_number")
+  metadata     Json      @default("{}")
+  analysis     Json?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @default(now()) @map("updated_at")
+  createdBy    String?   @map("created_by") @db.Uuid
+
+  @@map("photos")
+}
+
+model Notification {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title     String
+  message   String
+  type      String
+  severity  String
+  read      Boolean  @default(false)
+  relatedId String?  @map("related_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  userId    String   @map("user_id") @db.Uuid
+
+  @@map("notifications")
+}

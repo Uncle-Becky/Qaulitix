@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page xmlns="http://schemas.nativescript.org/tns.xsd" navigatingTo="navigatingTo" class="bg-gray-900">
+    <!-- Error State -->
+    <StackLayout visibility="{{ hasError ? 'visible' : 'collapsed' }}" class="p-4">
+        <Label text="An error occurred" class="text-xl text-red-500"/>
+        <Label text="{{ errorMessage }}" class="text-white"/>
+        <Button text="Retry" tap="{{ retry }}" class="bg-blue-500 text-white p-2 rounded"/>
+    </StackLayout>
+
+    <!-- Loading State -->
+    <ActivityIndicator busy="{{ isLoading }}" visibility="{{ isLoading ? 'visible' : 'collapsed' }}" 
+                      class="text-blue-500"/>
+
+    <!-- Main Content -->
+    <GridLayout rows="auto,*" visibility="{{ !hasError && !isLoading ? 'visible' : 'collapsed' }}">
+        <ActionBar class="action-bar bg-gray-800" row="0">
+            <GridLayout columns="*,auto" class="px-4">
+                <Label text="Construction QC" class="text-xl font-bold text-white" col="0"/>
+                <StackLayout orientation="horizontal" col="1">
+                    <Label text="🔔" class="p-2 text-white" tap="{{ markAllNotificationsRead }}"/>
+                    <Label text="{{ unreadNotifications }}" class="bg-red-500 text-white rounded-full px-2" 
+                           visibility="{{ unreadNotifications > 0 ? 'visible' : 'collapsed' }}"/>
+                </StackLayout>
+            </GridLayout>
+        </ActionBar>
+
+        <!-- Rest of your existing TabView content -->
+        <TabView row="1" selectedIndex="{{ selectedTabIndex }}" 
+                selectedTabTextColor="#FF4500" class="bg-gray-900">
+            <!-- Your existing TabViewItems -->
+        </TabView>
+    </GridLayout>
+</Page>
