@@ -45,7 +45,7 @@ export function useDocuments(options: UseCollectionOptions = {}) {
   });
 
   return {
-    data: (query.data as Documents[] | undefined) ?? undefined,
+    data: query.data as Documents[] | undefined,
     isLoading: withQuery ? query.isLoading : false,
     error: withQuery ? query.error : undefined,
     create: createMutation.mutate,
