@@ -1,36 +1,29 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { supabase } from '../../lib/supabase';
-import toast from 'react-hot-toast';
-
-interface InspectionFormData {
-  title: string;
-  date: string;
-  location: string;
-  priority: 'low' | 'medium' | 'high';
-  jobNumber: string;
-}
+import { useInspections } from '../../hooks/useApi';
+import type { InspectionFormData } from '../../types/components';
 
 export default function InspectionForm({ onSuccess }: { onSuccess?: () => void }) {
-  const { register, handleSubmit, formState: { errors } } = useForm<InspectionFormData>();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<InspectionFormData>();
+  const { createAsync, isCreating } = useInspections({ withQuery: false });
 
   const onSubmit = async (data: InspectionFormData) => {
     try {
-      const { error } = await supabase
-        .from('inspections')
-        .insert([{
-          ...data,
-          status: 'pending',
-          checklist: []
-        }]);
+      await createAsync({
+        title: data.title,
+        date: new Date(data.date).toISOString(),
+        location: data.location,
+        priority: data.priority,
+        job_number: data.jobNumber,
+        status: 'pending',
+        checklist: [],
+        assigned_to: null
+      });
 
-      if (error) throw error;
-      
-      toast.success('Inspection scheduled successfully');
+      reset();
       onSuccess?.();
     } catch (error) {
-      toast.error('Failed to schedule inspection');
-      console.error('Error:', error);
+      console.error('Failed to schedule inspection:', error);
     }
   };
 
@@ -101,9 +94,10 @@ export default function InspectionForm({ onSuccess }: { onSuccess?: () => void }
 
       <button
         type="submit"
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        disabled={isCreating}
+        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
       >
-        Schedule Inspection
+        {isCreating ? 'Scheduling...' : 'Schedule Inspection'}
       </button>
     </form>
   );

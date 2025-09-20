@@ -1,30 +1,27 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useDocuments } from '../../hooks/useApi';
-import toast from 'react-hot-toast';
-
-interface DocumentFormData {
-  title: string;
-  type: 'spec' | 'code' | 'requirement';
-  content: string;
-}
+import type { DocumentFormData } from '../../types/components';
 
 export default function DocumentForm({ onSuccess }: { onSuccess?: () => void }) {
-  const { create } = useDocuments();
-  const { register, handleSubmit, formState: { errors } } = useForm<DocumentFormData>();
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<DocumentFormData>();
+  const { createAsync, isCreating } = useDocuments({ withQuery: false });
 
   const onSubmit = async (data: DocumentFormData) => {
     try {
-      await create({
-        ...data,
+      await createAsync({
+        title: data.title,
+        type: data.type,
+        content: data.content,
         status: 'draft',
         metadata: {},
-        revision_history: []
+        revision_history: [],
+        version: 1
       });
+      reset();
       onSuccess?.();
     } catch (error) {
-      toast.error('Failed to create document');
-      console.error('Error:', error);
+      console.error('Failed to create document:', error);
     }
   };
 
@@ -71,9 +68,10 @@ export default function DocumentForm({ onSuccess }: { onSuccess?: () => void }) 
 
       <button
         type="submit"
-        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        disabled={isCreating}
+        className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
       >
-        Create Document
+        {isCreating ? 'Creating...' : 'Create Document'}
       </button>
     </form>
   );
