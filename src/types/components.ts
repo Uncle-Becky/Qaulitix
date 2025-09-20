@@ -35,6 +35,7 @@ export interface DeficiencyFormData {
   severity: 'low' | 'medium' | 'high';
   location: string;
   dueDate?: string;
+  inspectionId?: string;
 }
 
 export interface InspectionFormData {

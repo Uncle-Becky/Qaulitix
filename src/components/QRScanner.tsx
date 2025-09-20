@@ -32,9 +32,9 @@ export default function QRScanner({ onScan, onError }: QRScannerProps) {
         (decodedText) => {
           onScan(decodedText);
         },
-        (error) => {
+        (errorMessage) => {
           if (onError) {
-            onError(error);
+            onError(new Error(errorMessage));
           }
         }
       );

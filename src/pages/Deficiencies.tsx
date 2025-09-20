@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useDeficiencies } from '../hooks/useApi';
+import { useDeficiencies, useInspections } from '../hooks/useApi';
 import { Dialog } from '@headlessui/react';
 import DeficiencyForm from '../components/forms/DeficiencyForm';
 import ShareLink from '../components/ShareLink';
@@ -7,6 +7,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Deficiencies() {
   const { data: deficiencies, isLoading } = useDeficiencies();
+  const { data: inspections } = useInspections();
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   if (isLoading) {
@@ -67,7 +68,14 @@ export default function Deficiencies() {
             <Dialog.Title className="text-lg font-medium mb-4">
               Report Deficiency
             </Dialog.Title>
-            <DeficiencyForm onSuccess={() => setIsFormOpen(false)} />
+            <DeficiencyForm
+              onSuccess={() => setIsFormOpen(false)}
+              inspections={inspections?.map((inspection) => ({
+                id: inspection.id,
+                title: inspection.title,
+                job_number: inspection.job_number
+              }))}
+            />
           </div>
         </div>
       </Dialog>

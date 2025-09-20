@@ -86,6 +86,32 @@ export interface Database {
         Insert: Omit<Database['public']['Tables']['notifications']['Row'], 'id' | 'created_at'>;
         Update: Partial<Database['public']['Tables']['notifications']['Insert']>;
       };
+      comments: {
+        Row: {
+          id: string;
+          content: string;
+          entity_type: 'inspection' | 'deficiency' | 'document';
+          entity_id: string;
+          created_at: string;
+          updated_at: string;
+          created_by: string | null;
+        };
+        Insert: Omit<Database['public']['Tables']['comments']['Row'], 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Database['public']['Tables']['comments']['Insert']>;
+      };
+      activities: {
+        Row: {
+          id: string;
+          type: string;
+          entity_type: string;
+          entity_id: string;
+          data: Record<string, any>;
+          created_at: string;
+          created_by: string | null;
+        };
+        Insert: Omit<Database['public']['Tables']['activities']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['activities']['Insert']>;
+      };
     };
   };
 }
