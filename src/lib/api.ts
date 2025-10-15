@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
-import type { ApiError, ApiResponse, Documents, Inspections, Deficiencies, Photos, Notifications } from '../types/api';
+import type { Documents, Inspections, Deficiencies, Photos, Notifications } from '../types/api';
+import type { Database } from '../types/database';
 
 export class ApiClientError extends Error {
   constructor(message: string, public code?: string) {
@@ -8,19 +9,48 @@ export class ApiClientError extends Error {
   }
 }
 
+type DocumentInsert = Database['public']['Tables']['documents']['Insert'];
+type InspectionInsert = Database['public']['Tables']['inspections']['Insert'];
+type DeficiencyInsert = Database['public']['Tables']['deficiencies']['Insert'];
+type PhotoInsert = Database['public']['Tables']['photos']['Insert'];
+
 export const api = {
+  documents: {
+    async getAll(): Promise<Documents[]> {
+      const { data, error } = await supabase
+        .from('documents')
+        .select('*')
+        .order('updated_at', { ascending: false });
+
+      if (error) throw new ApiClientError(error.message, error.code);
+      return data || [];
+    },
+
+    async create(document: DocumentInsert): Promise<Documents> {
+      const { data, error } = await supabase
+        .from('documents')
+        .insert([document])
+        .select()
+        .single();
+
+      if (error) throw new ApiClientError(error.message, error.code);
+      if (!data) throw new ApiClientError('Failed to create document');
+      return data;
+    }
+  },
+
   inspections: {
     async getAll(): Promise<Inspections[]> {
       const { data, error } = await supabase
         .from('inspections')
         .select('*')
         .order('date', { ascending: false });
-      
+
       if (error) throw new ApiClientError(error.message, error.code);
       return data || [];
     },
 
-    async create(inspection: Omit<Inspections, 'id' | 'created_at' | 'updated_at'>): Promise<Inspections> {
+    async create(inspection: InspectionInsert): Promise<Inspections> {
       const { data, error } = await supabase
         .from('inspections')
         .insert([inspection])
@@ -44,7 +74,7 @@ export const api = {
       return data || [];
     },
 
-    async create(deficiency: Omit<Deficiencies, 'id' | 'created_at' | 'updated_at'>): Promise<Deficiencies> {
+    async create(deficiency: DeficiencyInsert): Promise<Deficiencies> {
       const { data, error } = await supabase
         .from('deficiencies')
         .insert([deficiency])
@@ -88,7 +118,7 @@ export const api = {
       return data.publicUrl;
     },
 
-    async create(photo: Omit<Photos, 'id' | 'created_at' | 'updated_at'>): Promise<Photos> {
+    async create(photo: PhotoInsert): Promise<Photos> {
       const { data, error } = await supabase
         .from('photos')
         .insert([photo])
@@ -119,7 +149,7 @@ export const api = {
         .from('notifications')
         .update({ read: true })
         .eq('user_id', userId);
-      
+
       if (error) throw new ApiClientError(error.message, error.code);
     }
   }

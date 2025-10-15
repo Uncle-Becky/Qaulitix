@@ -1,16 +1,24 @@
-import React, { useRef, useState } from 'react';
-import { usePhotos } from '../hooks/useApi';
+import React, { useMemo, useRef, useState } from 'react';
+import { usePhotos, useInspections } from '../hooks/useApi';
 import { useAuth } from '../contexts/AuthContext';
 import { Dialog } from '@headlessui/react';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Photos() {
   const { user } = useAuth();
-  const { data: photos = [], isLoading, upload } = usePhotos();
+  const { data: photos = [], isLoading, upload, isUploading } = usePhotos();
+  const { data: inspections = [] } = useInspections();
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [location, setLocation] = useState('');
+  const [jobNumber, setJobNumber] = useState('');
+  const [inspectionId, setInspectionId] = useState('');
+
+  const jobNumberOptions = useMemo(
+    () => Array.from(new Set(inspections.map((inspection) => inspection.job_number))).filter(Boolean),
+    [inspections]
+  );
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -19,20 +27,40 @@ export default function Photos() {
     }
   };
 
+  const handleInspectionSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = event.target.value;
+    setInspectionId(value);
+    if (value) {
+      const inspection = inspections.find((item) => item.id === value);
+      if (inspection) {
+        setJobNumber(inspection.job_number);
+      }
+    }
+  };
+
   const handleUpload = async () => {
-    if (selectedFile && location) {
+    if (selectedFile && location && jobNumber) {
       try {
         await upload({
           file: selectedFile,
           metadata: {
             location,
             description: selectedFile.name,
-            job_number: 'DEFAULT'
+            job_number: jobNumber,
+            inspection_id: inspectionId || null,
+            deficiency_id: null,
+            metadata: {
+              uploaded_by: user?.email ?? 'web-portal',
+              source: 'web-portal'
+            },
+            analysis: null
           }
         });
         setIsUploadOpen(false);
         setSelectedFile(null);
         setLocation('');
+        setJobNumber('');
+        setInspectionId('');
       } catch (error) {
         console.error('Upload failed:', error);
       }
@@ -99,6 +127,49 @@ export default function Photos() {
                 />
               </div>
               <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Linked Inspection
+                </label>
+                <select
+                  value={inspectionId}
+                  onChange={handleInspectionSelect}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                  <option value="">No linked inspection</option>
+                  {inspections.map((inspection) => (
+                    <option key={inspection.id} value={inspection.id}>
+                      {inspection.title} ({inspection.job_number})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Job Number
+                </label>
+                <input
+                  type="text"
+                  value={jobNumber}
+                  onChange={(e) => setJobNumber(e.target.value.toUpperCase())}
+                  placeholder="e.g. UNIT-1001"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
+                {jobNumberOptions.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                    {jobNumberOptions.map((number) => (
+                      <button
+                        key={number}
+                        type="button"
+                        onClick={() => setJobNumber(number)}
+                        className="rounded-full border border-gray-300 px-3 py-1 text-gray-600 hover:border-indigo-500 hover:text-indigo-600"
+                      >
+                        {number}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div>
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -115,10 +186,10 @@ export default function Photos() {
               </div>
               <button
                 onClick={handleUpload}
-                disabled={!selectedFile || !location}
+                disabled={!selectedFile || !location || !jobNumber || isUploading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
               >
-                Upload
+                {isUploading ? 'Uploading...' : 'Upload'}
               </button>
             </div>
           </div>
