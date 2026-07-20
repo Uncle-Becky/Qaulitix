@@ -17,6 +17,7 @@ export interface Database {
         };
         Insert: Omit<Database['public']['Tables']['documents']['Row'], 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['documents']['Insert']>;
+        Relationships: [];
       };
       inspections: {
         Row: {
@@ -35,6 +36,7 @@ export interface Database {
         };
         Insert: Omit<Database['public']['Tables']['inspections']['Row'], 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['inspections']['Insert']>;
+        Relationships: [];
       };
       deficiencies: {
         Row: {
@@ -52,6 +54,7 @@ export interface Database {
         };
         Insert: Omit<Database['public']['Tables']['deficiencies']['Row'], 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['deficiencies']['Insert']>;
+        Relationships: [];
       };
       photos: {
         Row: {
@@ -70,6 +73,7 @@ export interface Database {
         };
         Insert: Omit<Database['public']['Tables']['photos']['Row'], 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['photos']['Insert']>;
+        Relationships: [];
       };
       notifications: {
         Row: {
@@ -85,6 +89,7 @@ export interface Database {
         };
         Insert: Omit<Database['public']['Tables']['notifications']['Row'], 'id' | 'created_at'>;
         Update: Partial<Database['public']['Tables']['notifications']['Insert']>;
+        Relationships: [];
       };
       comments: {
         Row: {
@@ -98,6 +103,7 @@ export interface Database {
         };
         Insert: Omit<Database['public']['Tables']['comments']['Row'], 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['comments']['Insert']>;
+        Relationships: [];
       };
       activities: {
         Row: {
@@ -111,7 +117,12 @@ export interface Database {
         };
         Insert: Omit<Database['public']['Tables']['activities']['Row'], 'id' | 'created_at'>;
         Update: Partial<Database['public']['Tables']['activities']['Insert']>;
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
   };
 }
