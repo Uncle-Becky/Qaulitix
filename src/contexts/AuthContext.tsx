@@ -10,6 +10,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isRecoveringPassword, setIsRecoveringPassword] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -19,8 +20,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsRecoveringPassword(true);
+        navigate('/login', { replace: true });
+      }
       setLoading(false);
     });
 
@@ -98,12 +103,41 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const requestPasswordReset = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login`
+    });
+
+    if (error) {
+      toast.error(error.message);
+      throw error;
+    }
+
+    toast.success('If that account exists, a recovery link has been sent.');
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+
+    if (error) {
+      toast.error(error.message);
+      throw error;
+    }
+
+    setIsRecoveringPassword(false);
+    toast.success('Password updated successfully.');
+    navigate('/', { replace: true });
+  };
+
   const value: AuthContextType = {
     user,
     loading,
     signIn,
     signUp,
+    requestPasswordReset,
+    updatePassword,
     signOut,
+    isRecoveringPassword,
     isAuthenticated: !!user
   };
 
