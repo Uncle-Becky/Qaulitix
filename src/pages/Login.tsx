@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext';
-import toast from 'react-hot-toast';
-import QRScanner from '../components/QRScanner';
 
 interface AuthForm {
   email: string;
@@ -11,16 +9,20 @@ interface AuthForm {
 }
 
 export default function Login() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, requestPasswordReset, updatePassword, isRecoveringPassword } = useAuth();
   const [isRegistering, setIsRegistering] = useState(false);
-  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [isRequestingReset, setIsRequestingReset] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<AuthForm>();
 
   const onSubmit = async (data: AuthForm) => {
     try {
       setIsSubmitting(true);
-      if (isRegistering) {
+      if (isRecoveringPassword) {
+        await updatePassword(data.password);
+      } else if (isRequestingReset) {
+        await requestPasswordReset(data.email);
+      } else if (isRegistering) {
         await signUp(data.email, data.password);
       } else {
         await signIn(data.email, data.password);
@@ -33,17 +35,6 @@ export default function Login() {
     }
   };
 
-  const handleQRScan = async (data: string) => {
-    try {
-      const credentials = JSON.parse(data);
-      if (credentials.email && credentials.password) {
-        await signIn(credentials.email, credentials.password);
-      }
-    } catch (error) {
-      toast.error('Invalid QR code');
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
@@ -52,28 +43,20 @@ export default function Login() {
             Construction QC System
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            {isRegistering ? 'Create your account' : 'Sign in to your account'}
+            {isRecoveringPassword
+              ? 'Choose a new password'
+              : isRequestingReset
+                ? 'Recover your account'
+                : isRegistering
+                  ? 'Create your account'
+                  : 'Sign in to your account'}
           </p>
         </div>
 
-        {showQRScanner ? (
-          <div className="mt-8">
-            <QRScanner
-              onScan={handleQRScan}
-              onError={(error) => toast.error('Scanner error: ' + error.message)}
-            />
-            <button
-              onClick={() => setShowQRScanner(false)}
-              className="mt-4 w-full text-center text-sm text-indigo-600 hover:text-indigo-500"
-            >
-              Back to manual login
-            </button>
-          </div>
-        ) : (
           <>
             <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
               <div className="rounded-md shadow-sm -space-y-px">
-                <div>
+                {!isRecoveringPassword && <div>
                   <label htmlFor="email" className="sr-only">Email address</label>
                   <input
                     {...register('email', { 
@@ -91,8 +74,8 @@ export default function Login() {
                   {errors.email && (
                     <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
                   )}
-                </div>
-                <div>
+                </div>}
+                {!isRequestingReset && <div>
                   <label htmlFor="password" className="sr-only">Password</label>
                   <input
                     {...register('password', { 
@@ -104,7 +87,7 @@ export default function Login() {
                     })}
                     type="password"
                     className={`appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 ${
-                      isRegistering ? '' : 'rounded-b-md'
+                      isRegistering || isRecoveringPassword ? '' : 'rounded-b-md'
                     } focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                     placeholder="Password"
                     disabled={isSubmitting}
@@ -112,8 +95,8 @@ export default function Login() {
                   {errors.password && (
                     <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
                   )}
-                </div>
-                {isRegistering && (
+                </div>}
+                {(isRegistering || isRecoveringPassword) && (
                   <div>
                     <label htmlFor="confirmPassword" className="sr-only">Confirm Password</label>
                     <input
@@ -138,34 +121,50 @@ export default function Login() {
                   disabled={isSubmitting}
                   className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Processing...' : (isRegistering ? 'Create Account' : 'Sign in')}
+                  {isSubmitting
+                    ? 'Processing...'
+                    : isRecoveringPassword
+                      ? 'Set new password'
+                      : isRequestingReset
+                        ? 'Send recovery link'
+                        : isRegistering
+                          ? 'Create Account'
+                          : 'Sign in'}
                 </button>
               </div>
             </form>
 
             <div className="mt-4 text-center space-y-2">
-              {!isRegistering && (
+              {!isRegistering && !isRequestingReset && !isRecoveringPassword && (
                 <button
-                  onClick={() => setShowQRScanner(true)}
+                  onClick={() => {
+                    setIsRequestingReset(true);
+                    reset();
+                  }}
                   className="block w-full text-sm text-indigo-600 hover:text-indigo-500"
                   disabled={isSubmitting}
                 >
-                  Sign in with QR Code
+                  Forgot your password?
                 </button>
               )}
-              <button
+              {!isRecoveringPassword && <button
                 onClick={() => {
-                  setIsRegistering(!isRegistering);
+                  if (isRequestingReset) {
+                    setIsRequestingReset(false);
+                  } else {
+                    setIsRegistering(!isRegistering);
+                  }
                   reset();
                 }}
                 className="block w-full text-sm text-gray-600 hover:text-gray-500"
                 disabled={isSubmitting}
               >
-                {isRegistering ? 'Already have an account? Sign in' : "Don't have an account? Create one"}
-              </button>
+                {isRequestingReset || isRegistering
+                  ? 'Back to sign in'
+                  : "Don't have an account? Create one"}
+              </button>}
             </div>
           </>
-        )}
       </div>
     </div>
   );
